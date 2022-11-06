@@ -88,7 +88,7 @@ function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)
     """
     foreach(rm,filter(endswith(".jld2"),readdir(string(p3,"/temp"),join=true)));
     v=reshape(vc,nx,ny,nz);
-    M=[0:40:size(s1,1);size(s1,1)];
+    M=[0:8:size(s1,1);size(s1,1)];
     E=zeros(length(s1,));
     for m=1:size(M,1)-1
         Threads.@threads for I=(M[m]+1):M[m+1]
@@ -125,7 +125,7 @@ function g!(storage,vc)
     storage: the update direction.
     """
     DV=zeros(nx,ny,nz);
-    M=[0:40:size(s1,1);size(s1,1)];
+    M=[0:8:size(s1,1);size(s1,1)];
     for m=1:size(M,1)-1
         DV2=zeros(nx,ny,nz,length((M[m]+1):M[m+1]));
         @Threads.threads for I=(M[m]+1):M[m+1]
