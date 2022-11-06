@@ -1,5 +1,5 @@
 ## using packages
-using RTI,CSV
+using RTI,CSV,DataFrames
 ## define parameters for the forward problem
 # grid dimensions
 nx=100;
