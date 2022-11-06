@@ -102,7 +102,7 @@ mutable struct data4
 end
 data=data4(0,0,0);
 
-M=[0:50:size(s1,1);size(s1,1)];
+M=[0:4:size(s1,1);size(s1,1)];
 E=zeros(length(s1,));
 for m=1:size(M,1)-1
     Threads.@threads for I=(M[m]+1):M[m+1]
