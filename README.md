@@ -1,7 +1,7 @@
 # RTI
 
-[![Runtests](https://github.com/deconvolution/RTI/actions/workflows/Runtests.yml/badge.svg)](https://github.com/deconvolution/RTI/actions/workflows/Runtests.yml)
-[![Documentation](https://github.com/deconvolution/RTI/actions/workflows/Documenter.yml/badge.svg)](https://github.com/deconvolution/RTI/actions/workflows/Documenter.yml)
+[![Runtests](https://github.com/deconvolution/RTI/actions/workflows/Runtests.yml/badge.svg?branch=main)](https://github.com/deconvolution/RTI/actions/workflows/Runtests.yml)
+[![Documentation](https://github.com/deconvolution/RTI/actions/workflows/Documenter.yml/badge.svg?branch=main)](https://github.com/deconvolution/RTI/actions/workflows/Documenter.yml)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://deconvolution.github.io/RTI/dev/)
 
 A Julia package for Ray Theory Inversion (RTI).
