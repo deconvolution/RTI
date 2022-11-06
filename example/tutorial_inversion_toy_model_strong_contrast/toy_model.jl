@@ -1,4 +1,4 @@
-using RTI,Random,CSV,DataFrames
+using RTI,Random,CSV,DataFrames,MAT
 ## generate toy model
 # dimensions
 nx=60;
@@ -34,7 +34,7 @@ Random.seed!(1);
 tt=rand(2:nx-1,90,);
 tt2=rand(2:ny-1,90,);
 tt3=ones(size(tt))*2;
-for I=1:100
+for I=1:20
     global R_true,s1,s2,s3,r1,r2,r3;
     s1=push!(s1,round.(Int64,rand(2:nx-1,1,)));
     s2=push!(s2,round.(Int64,rand(2:ny-1,1,)));
@@ -102,10 +102,10 @@ mutable struct data4
 end
 data=data4(0,0,0);
 
-M=[0:4:size(s1,1);size(s1,1)];
+M=[0:8:size(s1,1);size(s1,1)];
 E=zeros(length(s1,));
 for m=1:size(M,1)-1
-    Threads.@threads for I=(M[m]+1):M[m+1]
+    for I=(M[m]+1):M[m+1]
         input_s1=s1[I][1];
         input_s2=s2[I][1];
         input_s3=s3[I][1];
@@ -125,7 +125,7 @@ for m=1:size(M,1)-1
 
         data.S=[input_s1 input_s2 input_s3];
         data.Rp=[reshape(r1[I],length(r1[I]),1) reshape(r2[I],length(r2[I]),1) reshape(r3[I],length(r3[I]),1) reshape(R_cal,length(R_cal),1)];
-        file=RTI.matopen(string(p3,"/../obs/source_",I,".mat"), "w");
+        file=matopen(string(p3,"/../obs/source_",I,".mat"), "w");
         write(file,"data",data);
         close(file);
     end
