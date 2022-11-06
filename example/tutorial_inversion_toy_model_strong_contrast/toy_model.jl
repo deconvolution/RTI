@@ -1,4 +1,4 @@
-using RTI,Random,CSV
+using RTI,Random,CSV,DataFrames
 ## generate toy model
 # dimensions
 nx=60;
