@@ -15,7 +15,7 @@ r3=Vector{Vector{Int64}}();
 s1t=Vector{Vector{Float64}}();
 s2t=Vector{Vector{Float64}}();
 s3t=Vector{Vector{Float64}}();
-# grid true location
+# receiver true location
 r1t=Vector{Vector{Float64}}();
 r2t=Vector{Vector{Float64}}();
 r3t=Vector{Vector{Float64}}();
