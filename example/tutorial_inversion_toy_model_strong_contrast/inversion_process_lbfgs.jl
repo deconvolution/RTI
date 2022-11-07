@@ -175,7 +175,7 @@ sca=1;
 test_storage=zeros(size(vc));
 g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
-## Perform inversion
+# Perform inversion
 fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*5.0,αmin=sca*.5),
@@ -228,5 +228,5 @@ end
 
 ax=plot(trace_time,trace_err,seriestype = :scatter,
 xlabel="time [s]",
-ylabel="data misfit [s^2]",yscale = :log10);
+ylabel="data misfit [s^2]",yscale=:log10);
 display(ax)
