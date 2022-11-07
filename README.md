@@ -5,7 +5,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://deconvolution.github.io/RTI/dev/)
 
 A Julia package for Ray Theory Inversion (RTI).
-This package contains the forward solver and adjoint solver for the eikonal eqution. With both simulations, the update direction of the velocity (gradient) can be obtained. The optimization is done by l-BFGS.
+This package contains the forward solver and adjoint solver for the eikonal eqution. With both simulations, the update direction of the velocity (gradient) can be obtained. The optimization methods can be chosen, such as gradient descent, conjugate gradient and LBFGS.
 ## Contents
 * [Target](#Target)
 * [Highlights](#Highlights)
