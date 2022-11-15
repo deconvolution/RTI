@@ -170,18 +170,18 @@ end
 N2=1;
 
 # Test inversion.
-fu=2;
+fu=3;
 data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3);
 sca=1;
 test_storage=zeros(size(vc));
 g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 ## Perform inversion
-fu=2;
+fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)[1],
-g!,vc,GradientDescent(alphaguess=LineSearches.InitialStatic(alpha=sca*100.0),
+g!,vc,GradientDescent(alphaguess=LineSearches.InitialStatic(alpha=sca*10.0),
 linesearch=LineSearches.Static()),
-Optim.Options(iterations=8,store_trace=true,show_trace=true,
+Optim.Options(iterations=7,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
 
 ## write final model to vtk
