@@ -169,18 +169,18 @@ end
 N2=-1;
 
 # Test inversion.
-fu=4;
+fu=3;
 data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3);
 sca=1;
 test_storage=zeros(size(vc));
 g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 ## Perform inversion
-fu=4;
+fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*1,αmin=sca*.1),
 linesearch=LineSearches.Static()),
-Optim.Options(iterations=6,store_trace=true,show_trace=true,
+Optim.Options(iterations=20,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);

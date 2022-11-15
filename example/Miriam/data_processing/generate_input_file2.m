@@ -69,15 +69,23 @@ end
 listing=dir(p3);
 data3=[];
 data4=[];
+data5=[];
+data6=[];
 for i=1:size(listing,1)-2
     tt=load([p3,listing(i+2).name]);
     data4=[data4;
         ((tt.data.Rp(:,1)-tt.data.S(1)).^2+(tt.data.Rp(:,2)-tt.data.S(2)).^2 ...
         +(tt.data.Rp(:,3)-tt.data.S(3)).^2).^.5*h,tt.data.Rp(:,4)];
+    data5=[data5;
+        tt.data.Rp(:,1),tt.data.Rp(:,2),tt.data.Rp(:,3)];
+    data6=[data6;
+        tt.data.S(1),tt.data.S(2),tt.data.S(3)];
     data3=[data3;
         ((tt.data.Rs(:,1)-tt.data.S(1)).^2+(tt.data.Rs(:,2)-tt.data.S(2)).^2 ...
         +(tt.data.Rs(:,3)-tt.data.S(3)).^2).^.5*h,tt.data.Rs(:,4)];
 end
+data5=data5*h;
+data6=data6*h;
 figure;
 ax=plot(data4(:,1),data4(:,2),'.','color','red');
 hold on;
@@ -85,3 +93,6 @@ ax2=plot(data3(:,1),data3(:,2),'.','color','blue');
 legend([ax,ax2],'P','S','Location','northwest','orientation','horizontal');
 xlabel('distance [m]');
 ylabel('t [s]');
+%% source and receiver locations
+writematrix(data5,'./receiver_location.csv');
+writematrix(data6,'./source_location.csv');
