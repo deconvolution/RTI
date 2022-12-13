@@ -41,7 +41,7 @@ s3=s3-10;
 s1_range=[2,nx-1];
 s2_range=[2,ny-1];
 s3_range=[2,nz-1];
-s1,s2,s3,=RTI.eikonal.acoustic_eikonal_update_source_location(nx=nx,
+s1,s2,s3,E_source_location=RTI.eikonal.acoustic_eikonal_update_source_location(nx=nx,
 ny=ny,
 nz=nz,
 h=h,
@@ -57,4 +57,3 @@ s2_range=s2_range,
 s3_range=s3_range,
 n_iteration=10,
 R_true=R_true);
-##
