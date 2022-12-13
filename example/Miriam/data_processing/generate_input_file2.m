@@ -1,8 +1,11 @@
 close all;
 clear all;
-
+%% define parameters
+% origin in [lon,lat,elevation]
 origin=[-2.85,35.85,-19000];
+% grid spacing
 h=800;
+%%
 x_min=3;
 y_min=3;
 z_min=3;

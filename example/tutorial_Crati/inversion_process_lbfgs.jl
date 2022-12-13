@@ -178,7 +178,7 @@ sca=1/maximum(abs.(test_storage));
 fu=6;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
-linesearch=LineSearches.Static()),
+linesearch=LineSearches.BackTracking(c_1=10.0^-8)),
 Optim.Options(iterations=6,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
 ## write final model to vtk

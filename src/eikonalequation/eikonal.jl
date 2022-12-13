@@ -12,4 +12,8 @@ FileIO,JLD2
 include("./acoustic_eikonal_forward.jl");
 ## acoustic traveltime adjoint
 include("./acoustic_eikonal_adjoint.jl");
+##
+include("./acoustic_eikonal_source_perturbation.jl");
+##
+include("./acoustic_eikonal_update_source_location.jl");
 end

@@ -1,7 +1,7 @@
 ## Compute model mosfit
 using RTI
 ## gc
-tt=RTI.readmat("./inversion_process_gc/final/final_model.mat","data");
+tt=RTI.readmat("./inversion_process_gd/final/final_model.mat","data");
 nx=tt["nx"];
 ny=tt["ny"];
 nz=tt["nz"];
