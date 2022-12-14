@@ -3,8 +3,8 @@
 Update source location.
 "
 
-function acoustic_eikonal_update_source_location(;nx,ny,nz,h,v,s1,s2,s3,r1,r2,r3,
-    s1_range=[],s2_range=[],s3_range=[],
+function acoustic_eikonal_compute_source_location(;nx,ny,nz,h,v,s1,s2,s3,r1,r2,r3,
+    s1_range=nothing,s2_range=nothing,s3_range=nothing,
     n_iteration,R_true)
 
     E=NaN*ones(n_iteration,);
@@ -47,7 +47,7 @@ function acoustic_eikonal_update_source_location(;nx,ny,nz,h,v,s1,s2,s3,r1,r2,r3
         s2=s2-round(Int64,l2/h);
         s3=s3-round(Int64,l3/h);
 
-        if length(s1_range)>0
+        if s1_range!==nothing
             if s1<s1_range[1]
                 s1=s1_range[1];
             else
@@ -57,7 +57,7 @@ function acoustic_eikonal_update_source_location(;nx,ny,nz,h,v,s1,s2,s3,r1,r2,r3
             end
         end
 
-        if length(s2_range)>0
+        if s2_range!==nothing
             if s2<s2_range[1]
                 s2=s2_range[1];
             else
@@ -67,7 +67,7 @@ function acoustic_eikonal_update_source_location(;nx,ny,nz,h,v,s1,s2,s3,r1,r2,r3
             end
         end
 
-        if length(s3_range)>0
+        if s3_range!==nothing
             if s3<s3_range[1]
                 s3=s3_range[1];
             else

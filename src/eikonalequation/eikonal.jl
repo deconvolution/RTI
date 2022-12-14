@@ -15,5 +15,7 @@ include("./acoustic_eikonal_adjoint.jl");
 ##
 include("./acoustic_eikonal_source_perturbation.jl");
 ##
-include("./acoustic_eikonal_update_source_location.jl");
+include("./acoustic_eikonal_compute_source_location.jl");
+##
+include("./acoustic_eikonal_compute_source_move.jl");
 end

@@ -2,12 +2,8 @@
 "
 Adjoint eikonal equation solver.
 "
-function acoustic_eikonal_adjoint(;nx,ny,nz,h,T,r1,r2,r3,s1,s2,s3,R_cal,R_true,N)
-
-    ## calculate misfit
-    lambda=zeros(nx,ny,nz);
-    R_diff=R_cal-R_true;
-
+function acoustic_eikonal_adjoint(;nx,ny,nz,h,T,r1,r2,r3,s1,s2,s3,R_cal,R_true,N,
+    l1=nothing,l2=nothing,l3=nothing,n_iteration=1,tol=nothing)
     ## calculate dirivative to T
     Tx=zeros(nx,ny,nz);
     Ty=copy(Tx);
@@ -16,6 +12,16 @@ function acoustic_eikonal_adjoint(;nx,ny,nz,h,T,r1,r2,r3,s1,s2,s3,R_cal,R_true,N
     Tx[1:end-1,:,:]=T[2:end,:,:]-T[1:end-1,:,:];
     Ty[:,1:end-1,:]=T[:,2:end,:]-T[:,1:end-1,:];
     Tz[:,:,1:end-1]=T[:,:,2:end]-T[:,:,1:end-1];
+
+    ## calculate misfit
+    lambda=zeros(nx,ny,nz);
+    if l1==nothing && l2==nothing &&l3==nothing
+        R_diff=R_cal-R_true;
+    else
+        R_diff=R_cal+l1*Tx+l2*Ty+l3*Tz-R_true;
+    end
+
+
 
     a1_plus=(Tx+abs.(Tx))/h/2;
     a1_minus=(Tx-abs.(Tx))/h/2;
@@ -42,10 +48,12 @@ function acoustic_eikonal_adjoint(;nx,ny,nz,h,T,r1,r2,r3,s1,s2,s3,R_cal,R_true,N
     A2[s1,s2,s3-1]+A2[s1,s2,s3+1]);
 
     ## boundary condition of lambda
-    lambda[CartesianIndex.(r1,r2,r3)]=R_diff./Tz[CartesianIndex.(r1,r2,r3)]./N;
+    lambda[CartesianIndex.(r1,r2,r3)]=-R_diff./Tz[CartesianIndex.(r1,r2,r3)]./N/2;
+    ## define true iterations
+    nt=0;
     ##
     lambda_old=copy(lambda);
-    for l=1
+    for l=1:n_iteration
         lambda_old[:]=lambda[:];
         for i=2:nx-1
             for j=2:ny-1
@@ -166,6 +174,17 @@ function acoustic_eikonal_adjoint(;nx,ny,nz,h,T,r1,r2,r3,s1,s2,s3,R_cal,R_true,N
                 end
             end
         end
+        nt=nt+1;
+        
+        if n_iteration>1
+            tt=findmax(abs.(lambda-lambda_old));
+            if tt[1]<tol*abs(lambda[tt[2]])
+                break;
+            end
+        end
+
     end
-    return lambda
+
+
+    return lambda,nt
 end

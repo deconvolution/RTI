@@ -2,7 +2,7 @@
 "
 Forward eikonal equation solver.
 "
-function acoustic_eikonal_forward(;nx,ny,nz,h,v,s1,s2,s3,T0,r1,r2,r3)
+function acoustic_eikonal_forward(;nx,ny,nz,h,v,s1,s2,s3,T0,r1,r2,r3,n_iteration=1,tol=nothing)
 
     T=ones(nx,ny,nz)*3.1415926*10^12;
     T[CartesianIndex.(s1,s2,s3)] =T0;
@@ -22,7 +22,14 @@ function acoustic_eikonal_forward(;nx,ny,nz,h,v,s1,s2,s3,T0,r1,r2,r3)
     ## fast sweeping
     u=zeros(1,1);
     a=zeros(3,1);
-    for l=1
+    ## define last T
+    T_last=zeros(nx,ny,nz);
+    ## define true iterations
+    nt=0;
+    for l=1:n_iteration
+        if n_iteration>1
+            T_last[:,:,:]=T[:,:,:];
+        end
         for i=1:size(X1col,1)
             a[1]=min(T[X1col[i]-1,Y1col[i],Z1col[i]],T[X1col[i]+1,Y1col[i],Z1col[i]]);
             a[2]=min(T[X1col[i],Y1col[i]-1,Z1col[i]],T[X1col[i],Y1col[i]+1,Z1col[i]]);
@@ -38,6 +45,13 @@ function acoustic_eikonal_forward(;nx,ny,nz,h,v,s1,s2,s3,T0,r1,r2,r3)
             end
             T[X1col[i],Y1col[i],Z1col[i]]=min(T[X1col[i],Y1col[i],Z1col[i]],u[1]);
         end
+        nt=nt+1;
+        if n_iteration>1
+            tt=findmax(abs.(T-T_last));
+            if tt[1]<tol*abs(T[tt[2]])
+                break;
+            end
+        end
     end
     ## approximate boundaries
     T[1,:,:]=T[2,:,:];
@@ -50,5 +64,5 @@ function acoustic_eikonal_forward(;nx,ny,nz,h,v,s1,s2,s3,T0,r1,r2,r3)
     ## assign receivers
     T_obs=T[CartesianIndex.(r1,r2,r3)];
 
-    return T,T_obs
+    return T,T_obs,nt
 end
