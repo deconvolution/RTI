@@ -48,9 +48,9 @@ for I=1:size(tt,1)
 end
 ## give perturbation to s
 Random.seed!(1);
-ds1=rand(-3:3,length(s1),);
-ds2=rand(-3:3,length(s2),);
-ds3=rand(-3:3,length(s3),);
+ds1=rand(-5:5,length(s1),);
+ds2=rand(-5:5,length(s2),);
+ds3=rand(-5:5,length(s3),);
 for I=1:length(s1)
     s1[I]=s1[I]+[ds1[I]];
     s2[I]=s2[I]+[ds2[I]];
@@ -189,7 +189,7 @@ sca=1/maximum(abs.(test_storage));
 # Perform inversion
 fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)[1],
-g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*60.0,αmin=sca*.5),
+g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*10.0,αmin=sca*.5),
 linesearch=LineSearches.BackTracking(c_1=10.0^-8)),
 Optim.Options(iterations=10,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));

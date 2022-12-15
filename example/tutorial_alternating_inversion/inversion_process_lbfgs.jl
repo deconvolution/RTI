@@ -55,13 +55,17 @@ for I=1:size(tt,1)
 end
 ## give perturbation to s
 Random.seed!(1);
-ds1=rand(-3:3,length(s1),);
-ds2=rand(-3:3,length(s2),);
-ds3=rand(-3:3,length(s3),);
-for I=1:length(s1)
-    s1[I]=s1d[I]+[ds1[I]];
-    s2[I]=s2d[I]+[ds2[I]];
-    s3[I]=s3d[I]+[ds3[I]];
+ds1=rand(-5:5,length(s1d),);
+ds2=rand(-5:5,length(s2d),);
+ds3=rand(-5:5,length(s3d),);
+tt=readdir("./obs/");
+file_name=tt;
+for I=1:length(s1d)
+    global s1,s2,s3
+    tt2=RTI.readmat(string("./obs/",tt[I]),"data");
+    s1=push!(s1,round.(Int64,tt2["S"][:,1]+[ds1[I]]));
+    s2=push!(s2,round.(Int64,tt2["S"][:,2]+[ds2[I]]));
+    s3=push!(s3,round.(Int64,tt2["S"][:,3]+[ds3[I]]));
     RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[s1[I][1],s2[I][1],s3[I][1]]);
 end
 ## define parameters for the forward problem
@@ -126,9 +130,7 @@ function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,update_s
             r2=r2[I],
             r3=r3[I]);
             tx,ty,tz=RTI.G(T,h);
-            E[I]=.5*sum((R_cal+l1[I]*tx[CartesianIndex.(r1[I],r2[I],r3[I])]
-            +l2[I]*ty[CartesianIndex.(r1[I],r2[I],r3[I])]
-            +l3[I]*tz[CartesianIndex.(r1[I],r2[I],r3[I])]-R_true[I]).^2);
+            E[I]=.5*sum((R_cal-R_true[I]).^2);
             RTI.JLD2.save(string(p3,"/temp/source_",I,".jld2"), "data",T);
 
             if update_source==1
@@ -144,10 +146,10 @@ function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,update_s
                 r1=r1[I],
                 r2=r2[I],
                 r3=r3[I],
-                s1_range=[4,nx-3],
-                s2_range=[4,ny-3],
-                s3_range=[7,nz-3],
-                n_iteration=4,
+                s1_range=[2,nx-1],
+                s2_range=[2,ny-1],
+                s3_range=[2,nz-1],
+                n_iteration=1,
                 R_true=R_true[I]);
                 RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[s1i,s2i,s3i]);
             end
@@ -185,11 +187,6 @@ function g!(storage,vc)
 
             tx,ty,tz=RTI.G(temp_t,h);
 
-            E[I]=.5*sum((R_cal+l1[I]*tx[CartesianIndex.(r1[I],r2[I],r3[I])]
-            +l2[I]*ty[CartesianIndex.(r1[I],r2[I],r3[I])]
-            +l3[I]*tz[CartesianIndex.(r1[I],r2[I],r3[I])]-R_true[I]).^2);
-
-            tx,ty,tz=RTI.G(temp_t,h);
             # Compute adjoint travel time
             lambda,~=RTI.eikonal.acoustic_eikonal_adjoint(nx=nx,
             ny=ny,
@@ -202,7 +199,7 @@ function g!(storage,vc)
             s1=input_s1,
             s2=input_s2,
             s3=input_s3,
-            R_cal=temp_t[CartesianIndex.(r1[I],r2[I],r3[I])]+l1[I]*tx[CartesianIndex.(r1[I],r2[I],r3[I])]+l2[I]*ty[CartesianIndex.(r1[I],r2[I],r3[I])]+l3[I]*tz[CartesianIndex.(r1[I],r2[I],r3[I])],
+            R_cal=temp_t[CartesianIndex.(r1[I],r2[I],r3[I])],
             R_true=R_true[I],
             N=ones(size(temp_t[CartesianIndex.(r1[I],r2[I],r3[I])]))*(N2));
             if m==1
@@ -236,7 +233,7 @@ sca=1/maximum(abs.(test_storage));
 # Perform inversion
 fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,1)[1],
-g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*60.0,αmin=sca*.5),
+g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*10.0,αmin=sca*.5),
 linesearch=LineSearches.BackTracking(c_1=10.0^-8)),
 Optim.Options(iterations=10,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
@@ -289,11 +286,10 @@ xlabel="time [s]",
 ylabel="data misfit [s^2]",yscale=:log10);
 display(ax)
 ##
-for i=1:length(l1)
-    l1[i],l2[i],l3[i]=input_l1,input_l2,input_l3=RTI.JLD2.load(string(p3,"/temp2/source_",i,".jld2"))["data"];
-end
 location_error=0;
 for i=1:length(s1)
+    input_s1,input_s2,input_s3=RTI.JLD2.load(string(p3,"/temp2/source_",i,".jld2"))["data"];
+    global location_error
     location_error=location_error+
-    .5*sum((s1[i][1]-s1d[i][1]).^2*h+(s2[i][1]-s2d[i][1]).^2*h^2+(s3[i][1]-s3d[i][1]).^2*h^2);
+    .5*sum((input_s1-s1d[i][1]).^2*h^2+(input_s2-s2d[i][1]).^2*h^2+(input_s3-s3d[i][1]).^2*h^2);
 end
