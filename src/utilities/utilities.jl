@@ -83,9 +83,9 @@ end
 Create checkerboard.
 
 Example: cb(h,nx,ny,nz,edge_length)
-  h: grid spacing.
-  nx,ny,nz: Dimensions.
-  edge_length: edge length of each block.
+h: grid spacing.
+nx,ny,nz: Dimensions.
+edge_length: edge length of each block.
 "
 function cb(h,nx,ny,nz,edge_length)
     Y,X,Z=RTI.meshgrid(h*(1:ny),h*(1:nx),h*(1:nz));
@@ -96,4 +96,18 @@ function cb(h,nx,ny,nz,edge_length)
     w[w .>=0] .=1;
     w[w .<0] .=-1;
     return w
+end
+##
+"
+Compute 3D gradient
+"
+function G(u,h)
+    nx,ny,nz=size(u);
+    tx=zeros(nx,ny,nz);
+    tx[1:end-1,:,:]=(u[2:end,:,:]-u[1:end-1,:,:])/h;
+    ty=zeros(nx,ny,nz);
+    ty[:,1:end-1,:]=(u[:,2:end,:]-u[:,1:end-1,:])/h;
+    tz=zeros(nx,ny,nz);
+    tz[:,:,1:end-1]=(u[:,:,2:end]-u[:,:,1:end-1])/h;
+    return tx,ty,tz
 end

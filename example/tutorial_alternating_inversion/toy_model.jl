@@ -17,7 +17,7 @@ Y,X,Z=RTI.meshgrid(h*(1:ny),h*(1:nx),h*(1:nz));
 
 # createa a model
 v=ones(nx,ny,nz);
-v=1000 .+100*w;
+v=1000 .+200*w;
 ## define observations
 # observed data
 R_true=Vector{Vector{Float64}}();
@@ -31,14 +31,14 @@ r2=Vector{Vector{Int64}}();
 r3=Vector{Vector{Int64}}();
 ## Create empty vectors to store source and receivers
 Random.seed!(1);
-tt=rand(2:nx-1,30,);
-tt2=rand(2:ny-1,30,);
-tt3=ones(size(tt))*4;
-for I=1:40
+tt=rand(2:nx-1,90,);
+tt2=rand(2:ny-1,90,);
+tt3=ones(size(tt))*2;
+for I=1:20
     global R_true,s1,s2,s3,r1,r2,r3;
-    s1=push!(s1,round.(Int64,rand(6:nx-5,1,)));
-    s2=push!(s2,round.(Int64,rand(6:ny-5,1,)));
-    s3=push!(s3,round.(Int64,rand(20:nz-5,1,)));
+    s1=push!(s1,round.(Int64,rand(2:nx-1,1,)));
+    s2=push!(s2,round.(Int64,rand(2:ny-1,1,)));
+    s3=push!(s3,round.(Int64,rand(20:nz-1,1,)));
     r1=push!(r1,round.(Int64,tt));
     r2=push!(r2,round.(Int64,tt2));
     r3=push!(r3,round.(Int64,tt3));
