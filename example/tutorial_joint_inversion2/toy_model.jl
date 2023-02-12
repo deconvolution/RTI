@@ -16,8 +16,14 @@ w=RTI.cb(h,nx,ny,nz,edge_length);
 Y,X,Z=RTI.meshgrid(h*(1:ny),h*(1:nx),h*(1:nz));
 
 # createa a model
-v=ones(nx,ny,nz);
-v=1000 .+100*w;
+v=zeros(nx,ny,nz);
+#=
+for i=1:nz
+    v[:,:,i] .=1000+10*i;
+end
+=#
+v[:] .=1000;
+v=v+150*w;
 ## define observations
 # observed data
 R_true=Vector{Vector{Float64}}();

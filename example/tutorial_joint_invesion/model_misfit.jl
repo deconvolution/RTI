@@ -13,12 +13,14 @@ v_gc=tt["v"];
 tt=RTI.readmat("./inversion_process_lbfgs/final/final_model.mat","data");
 v_lbfgs=tt["v"];
 ## vt
-tt=RTI.readmat("./toy_model/true_model.mat","data");
+tt=RTI.readmat("../tutorial_inversion_toy_model_strong_contrast/toy_model/true_model.mat","data");
 nx=tt["nx"];
 ny=tt["ny"];
 nz=tt["nz"];
-v0=ones(nx,ny,nz)*1000.0;
 vt=tt["v"];
+## v0
+tt=RTI.readmat("../tutorial_inversion_toy_model_strong_contrast/inversion_process_lbfgs/final/final_model.mat","data");
+v0=tt["v"];
 ##
 # misfit initial model
 mis0=.5*sum((v0-vt).^2)

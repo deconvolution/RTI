@@ -84,9 +84,23 @@ Z=tt["Z"];
 # grid spacing
 h=tt["h"];
 
+# compute average velocity
+va=0;
+ne=0;
+for i=1:length(s1)
+    for j=1:length(r1[i])
+        global va,ne;
+        va=va+((s1[i][1]*h-r1[i][j]*h)^2+
+        (s2[i][1]*h-r2[i][j]*h)^2+
+        (s3[i][1]*h-r3[i][j]*h)^2)^.5/R_true[i][j];
+        ne=ne+1;
+    end
+end
+va=va/ne;
+
 # initial velocity model
-v=copy(tt["v"]);
-v[:] .=1000;
+v=zeros(nx,ny,nz);
+v[:] .=va;
 
 # reshape the velocity to a 1D array
 vc=reshape(v,nx*ny*nz,);
@@ -235,7 +249,7 @@ fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,1)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*10.0,αmin=sca*.5),
 linesearch=LineSearches.BackTracking(c_1=10.0^-8)),
-Optim.Options(iterations=10,store_trace=true,show_trace=true,
+Optim.Options(iterations=6,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);

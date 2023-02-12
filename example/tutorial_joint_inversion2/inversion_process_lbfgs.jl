@@ -9,6 +9,7 @@ end
 if isdir(string(p3,"/temp"))==0
     mkdir(string(p3,"/temp"))
 end
+
 if isdir(string(p3,"/final"))==0
     mkdir(string(p3,"/final"))
 end
@@ -72,12 +73,34 @@ Z=tt["Z"];
 # grid spacing
 h=tt["h"];
 
+
+# compute average velocity
+va=0;
+ne=0;
+for i=1:length(s1)
+    for j=1:length(r1[i])
+        global va,ne;
+        va=va+((s1[i][1]*h-r1[i][j]*h)^2+
+        (s2[i][1]*h-r2[i][j]*h)^2+
+        (s3[i][1]*h-r3[i][j]*h)^2)^.5/R_true[i][j];
+        ne=ne+1;
+    end
+end
+va=va/ne;
 # initial velocity model
-v=copy(tt["v"]);
-v[:] .=1000;
+v=zeros(nx,ny,nz);
+v[:] .=va;
 
 # reshape the velocity to a 1D array
 vc=reshape(v,nx*ny*nz,);
+
+# initial move of sources
+l1=zeros(length(s1),);
+l2=zeros(length(s1),);
+l3=zeros(length(s1),);
+for I=1:length(l1)
+    RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[l1[I],l2[I],l3[I]]);
+end
 ## define cost function
 mutable struct data2
     nx
@@ -88,20 +111,30 @@ mutable struct data2
     T
 end
 data=data2(0,0,0,0,0,0);
-function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)
+function data_cost_L2_norm(mc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true)
     """
     Target: to implement the forward problem.
     Comments: shots are parallelized.
     Output:
-      T: travel time for all events.
-      chi: L2-norm of the data misfit.
+    T: travel time for all events.
+    chi: L2-norm of the data misfit.
     """
     foreach(rm,filter(endswith(".jld2"),readdir(string(p3,"/temp"),join=true)));
+    vc=mc[1:nx*ny*nz];
+    l1=mc[nx*ny*nz+1:nx*ny*nz+length(s1)];
+    l2=mc[nx*ny*nz+length(s1)+1:nx*ny*nz+length(s1)*2];
+    l3=mc[nx*ny*nz+length(s1)*2+1:nx*ny*nz+length(s1)*3];
+
     v=reshape(vc,nx,ny,nz);
+
     M=[0:8:size(s1,1);size(s1,1)];
     E=zeros(length(s1,));
     for m=1:size(M,1)-1
         Threads.@threads for I=(M[m]+1):M[m+1]
+            input_l1=l1[I];
+            input_l2=l2[I];
+            input_l3=l3[I];
+
             input_s1=s1[I][1];
             input_s2=s2[I][1];
             input_s3=s3[I][1];
@@ -119,7 +152,10 @@ function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)
             r1=r1[I],
             r2=r2[I],
             r3=r3[I]);
-            E[I]=.5*sum((R_cal-R_true[I]).^2);
+            tx,ty,tz=RTI.G(T,h);
+            E[I]=.5*sum((R_cal+input_l1*tx[CartesianIndex.(r1[I],r2[I],r3[I])]
+            +input_l2*ty[CartesianIndex.(r1[I],r2[I],r3[I])]
+            +input_l3*tz[CartesianIndex.(r1[I],r2[I],r3[I])]-R_true[I]).^2);
             RTI.JLD2.save(string(p3,"/temp/source_",I,".jld2"), "data",T);
         end
     end
@@ -128,12 +164,21 @@ function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)
     return chi
 end
 ## define gradient function, the gradient is computed using adjoint state method
-function g!(storage,vc)
+function g!(storage,mc)
     """
     Target: to supply the routine for the update direction of the velocity.
     Comments: shots are parallelized.
     storage: the update direction.
     """
+    vc=mc[1:nx*ny*nz];
+    l1=mc[nx*ny*nz+1:nx*ny*nz+length(s1)];
+    l2=mc[nx*ny*nz+length(s1)+1:nx*ny*nz+length(s1)*2];
+    l3=mc[nx*ny*nz+length(s1)*2+1:nx*ny*nz+length(s1)*3];
+    dl1=zeros(length(s1),1);
+    dl2=zeros(length(s1),1);
+    dl3=zeros(length(s1),1);
+    v=reshape(vc,nx,ny,nz);
+
     DV=zeros(nx,ny,nz);
     M=[0:8:size(s1,1);size(s1,1)];
     for m=1:size(M,1)-1
@@ -143,6 +188,11 @@ function g!(storage,vc)
             input_s1=s1[I][1];
             input_s2=s2[I][1];
             input_s3=s3[I][1];
+            tx,ty,tz=RTI.G(temp_t,h);
+
+            input_l1=l1[I];
+            input_l2=l2[I];
+            input_l3=l3[I];
 
             # Compute adjoint travel time
             lambda,~=RTI.eikonal.acoustic_eikonal_adjoint(nx=nx,
@@ -156,7 +206,7 @@ function g!(storage,vc)
             s1=s1[I][1],
             s2=s2[I][1],
             s3=s3[I][1],
-            R_cal=temp_t[CartesianIndex.(r1[I],r2[I],r3[I])],
+            R_cal=temp_t[CartesianIndex.(r1[I],r2[I],r3[I])]+input_l1*tx[CartesianIndex.(r1[I],r2[I],r3[I])]+input_l2*ty[CartesianIndex.(r1[I],r2[I],r3[I])]+input_l3*tz[CartesianIndex.(r1[I],r2[I],r3[I])],
             R_true=R_true[I],
             N=ones(size(temp_t[CartesianIndex.(r1[I],r2[I],r3[I])]))*(N2));
             if m==1
@@ -165,13 +215,29 @@ function g!(storage,vc)
                 tt=(m-1)*length((M[m-1]+1):M[m]);
             end
             DV2[:,:,:,I-tt]=DV2[:,:,:,I-tt]-2*lambda ./v .^3;
+            ## compute dl
+            dl1[I],dl2[I],dl3[I]=RTI.eikonal.acoustic_eikonal_compute_source_move2(nx=nx,
+            ny=ny,
+            nz=nz,
+            h=h,
+            v=v,
+            T=temp_t,
+            s1=s1[I][1],
+            s2=s2[I][1],
+            s3=s3[I][1],
+            r1=r1[I],
+            r2=r2[I],
+            r3=r3[I],
+            R_cal=temp_t[CartesianIndex.(r1[I],r2[I],r3[I])]+input_l1*tx[CartesianIndex.(r1[I],r2[I],r3[I])]+input_l2*ty[CartesianIndex.(r1[I],r2[I],r3[I])]+input_l3*tz[CartesianIndex.(r1[I],r2[I],r3[I])],
+            R_true=R_true[I]);
         end
         DV[:,:,:]=DV[:,:,:]+sum(DV2,dims=4);
     end
     mat"""
     $DV(:,:,:)=imgaussfilt3($DV,$fu);
     """
-    storage[:]=DV[:];
+    tt=cat(DV[:],dl1[:],dl2[:],dl3[:],dims=1);
+    storage[:]=tt[:];
 end
 ## Optimization
 
@@ -179,23 +245,24 @@ end
 N2=1;
 
 # Test inversion.
+mc=cat(v[:],l1,l2,l3,dims=1);
 fu=3;
-data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3);
+E0=data_cost_L2_norm(mc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true);
 sca=1;
-test_storage=zeros(size(vc));
-g!(test_storage,vc);
-sca=1/maximum(abs.(test_storage));
+test_storage=zeros(size(mc));
+g!(test_storage,mc);
+# sca=1/maximum(abs.(test_storage));
 
 # Perform inversion
 fu=3;
-opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3)[1],
-g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*10.0,αmin=sca*.5),
+opt1=optimize(mc->data_cost_L2_norm(mc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true)[1],
+g!,mc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*10.0^6,αmin=sca*10.0^5),
 linesearch=LineSearches.BackTracking(c_1=10.0^-8)),
 Optim.Options(iterations=10,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);
-vtkfile["v"]=reshape(opt1.minimizer,nx,ny,nz);
+vtkfile["v"]=reshape(opt1.minimizer[1:nx*ny*nz],nx,ny,nz);
 RTI.vtk_save(vtkfile);
 ## create CSV for source and receivers
 #=
@@ -219,7 +286,7 @@ Y,X,Z=RTI.meshgrid((1:ny)*h,(1:nx)*h,(1:nz)*h);
 data.X=X;
 data.Y=Y;
 data.Z=Z;
-data.v=reshape(opt1.minimizer,nx,ny,nz);
+data.v=reshape(opt1.minimizer[1:nx*ny*nz],nx,ny,nz);
 data.h=h;
 data.nx=nx;
 data.ny=ny;
@@ -228,6 +295,10 @@ data.nz=nz;
 file=RTI.matopen(string(p3,"/final/final_model.mat"), "w");
 write(file,"data",data);
 close(file);
+
+l1=opt1.minimizer[nx*ny*nz+1:nx*ny*nz+length(s1)];
+l2=opt1.minimizer[nx*ny*nz+length(s1)+1:nx*ny*nz+length(s1)*2];
+l3=opt1.minimizer[nx*ny*nz+length(s1)*2+1:nx*ny*nz+length(s1)*3];
 ## plot data misfit
 trace=opt1.trace;
 trace_err=zeros(size(trace));
@@ -241,3 +312,6 @@ ax=plot(trace_time,trace_err,seriestype = :scatter,
 xlabel="time [s]",
 ylabel="data misfit [s^2]",yscale=:log10);
 display(ax)
+##
+.5*sum((l1-ds1*h).^2+(l2-ds2*h).^2+(l3-ds3*h).^2)
+.5*sum((ds1*h).^2+(ds2*h).^2+(ds3*h).^2)

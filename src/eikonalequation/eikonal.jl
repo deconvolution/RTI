@@ -18,4 +18,6 @@ include("./acoustic_eikonal_source_perturbation.jl");
 include("./acoustic_eikonal_compute_source_location.jl");
 ##
 include("./acoustic_eikonal_compute_source_move.jl");
+##
+include("./acoustic_eikonal_compute_source_move2.jl");
 end
