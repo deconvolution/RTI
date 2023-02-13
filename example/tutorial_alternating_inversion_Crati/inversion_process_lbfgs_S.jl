@@ -42,22 +42,23 @@ T0=0;
 ## read data
 tt=readdir("./obs/");
 file_name=tt;
-for I=1:3#size(tt,1)
+for I=1:size(tt,1)
     global R_true,s1d,s2d,s3d,r1,r2,r3;
     tt2=RTI.readmat(string("./obs/",tt[I]),"data");
     R_true=push!(R_true,tt2["Rs"][:,4]);
-    s1d=push!(s1d,round.(Int64,tt2["S"][:,1]));
-    s2d=push!(s2d,round.(Int64,tt2["S"][:,2]));
-    s3d=push!(s3d,round.(Int64,tt2["S"][:,3]));
+    tt3=RTI.JLD2.load(string("inversion_process_lbfgs_P/temp2/source_",I,".jld2"))["data"];
+    s1d=push!(s1d,round.(Int64,[tt3[1]]));
+    s2d=push!(s2d,round.(Int64,[tt3[2]]));
+    s3d=push!(s3d,round.(Int64,[tt3[3]]));
     r1=push!(r1,round.(Int64,tt2["Rs"][:,1]));
     r2=push!(r2,round.(Int64,tt2["Rs"][:,2]));
     r3=push!(r3,round.(Int64,tt2["Rs"][:,3]));
     RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[s1d[I][1],s2d[I][1],s3d[I][1]]);
 end
+
 s1=copy(s1d);
 s2=copy(s2d);
 s3=copy(s3d);
-## define parameters for the forward problem
 # load initial velocity model
 tt=RTI.readmat("./m.mat","data");
 # number of grids
@@ -88,8 +89,7 @@ end
 va=va/ne;
 
 # initial velocity model
-v=zeros(nx,ny,nz);
-v[:] .=va;
+v=tt["vs"];
 
 # reshape the velocity to a 1D array
 vc=reshape(v,nx*ny*nz,);
@@ -118,7 +118,6 @@ function data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,update_s
     for m=1:size(M,1)-1
         Threads.@threads for I=(M[m]+1):M[m+1]
             input_s1,input_s2,input_s3=RTI.JLD2.load(string(p3,"/temp2/source_",I,".jld2"))["data"];
-
             # Compute forward travel time
             T,R_cal,~=RTI.eikonal.acoustic_eikonal_forward(nx=nx,
             ny=ny,
@@ -221,10 +220,10 @@ end
 ## Optimization
 
 # define the inciden direction for rays to receivers, 1 for +z and -1 for -z.
-N2=1;
+N2=-1;
 
 # Test inversion.
-fu=3;
+fu=6;
 E0=data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0);
 sca=1;
 test_storage=zeros(size(vc));
@@ -232,12 +231,21 @@ g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 
 # Perform inversion
-fu=3;
+fu=6;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0)[1],
-g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*10.0,αmin=sca*.5),
-linesearch=LineSearches.BackTracking(c_1=10.0^-8)),
-Optim.Options(iterations=6,store_trace=true,show_trace=true,
+g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
+linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
+Optim.Options(iterations=30,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
+
+#=
+vc=opt1.minimizer;
+opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,1)[1],
+g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
+linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
+Optim.Options(iterations=20,store_trace=true,show_trace=true,
+x_tol=0,g_tol=0));
+=#
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);
 vtkfile["v"]=reshape(opt1.minimizer,nx,ny,nz);
