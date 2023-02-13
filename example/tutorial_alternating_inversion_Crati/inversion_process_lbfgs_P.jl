@@ -294,3 +294,6 @@ for i=1:length(s1)
     location_error=location_error+
     .5*sum((input_s1-s1d[i][1]).^2*h^2+(input_s2-s2d[i][1]).^2*h^2+(input_s3-s3d[i][1]).^2*h^2);
 end
+##
+i=1;
+RTI.JLD2.load(string(p3,"/temp2/source_",i,".jld2"))["data"]
