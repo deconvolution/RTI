@@ -42,18 +42,22 @@ T0=0;
 ## read data
 tt=readdir("./obs/");
 file_name=tt;
-for I=1:size(tt,1)
+I=1;
+while I<=size(tt,1)
     global R_true,s1d,s2d,s3d,r1,r2,r3;
     tt2=RTI.readmat(string("./obs/",tt[I]),"data");
-    R_true=push!(R_true,tt2["Rs"][:,4]);
-    tt3=RTI.JLD2.load(string("inversion_process_lbfgs_P/temp2/source_",I,".jld2"))["data"];
-    s1d=push!(s1d,round.(Int64,[tt3[1]]));
-    s2d=push!(s2d,round.(Int64,[tt3[2]]));
-    s3d=push!(s3d,round.(Int64,[tt3[3]]));
-    r1=push!(r1,round.(Int64,tt2["Rs"][:,1]));
-    r2=push!(r2,round.(Int64,tt2["Rs"][:,2]));
-    r3=push!(r3,round.(Int64,tt2["Rs"][:,3]));
-    RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[s1d[I][1],s2d[I][1],s3d[I][1]]);
+    if length(tt2["Rs"])!=0
+        R_true=push!(R_true,tt2["Rs"][:,4]);
+        tt3=RTI.JLD2.load(string("inversion_process_lbfgs_P/temp2/source_",I,".jld2"))["data"];
+        s1d=push!(s1d,round.(Int64,[tt3[1]]));
+        s2d=push!(s2d,round.(Int64,[tt3[2]]));
+        s3d=push!(s3d,round.(Int64,[tt3[3]]));
+        r1=push!(r1,round.(Int64,tt2["Rs"][:,1]));
+        r2=push!(r2,round.(Int64,tt2["Rs"][:,2]));
+        r3=push!(r3,round.(Int64,tt2["Rs"][:,3]));
+        RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[s1d[I][1],s2d[I][1],s3d[I][1]]);
+    end
+    I=I+1;
 end
 
 s1=copy(s1d);
