@@ -74,8 +74,8 @@ v[:] .=3000;
 
 v=v+600*w;
 
-data["vs"]=v;
 data=copy(tt);
+data["vs"]=v;
 
 file=RTI.matopen("./c_vs.mat", "w");
 write(file,"data",data);
