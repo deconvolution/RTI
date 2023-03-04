@@ -25,7 +25,7 @@ turbo2=flip(turbo,1);
 redblue2=flip(redblue,1);
 %%
 % type the edge length
-edge_length=15000;
+edge_length=5000;
 %%
 receiver=load('./receiver_overview.csv');
 %% create checkerboard
@@ -172,7 +172,7 @@ vp=tt2;
 tt2=vs;
 for i=1:floor(nx/n)+1
     for j=1:floor(ny/n)+1
-        for k=1:floor(nz/n)+1
+        for k=1:floor(nz/n)
             tt=1;
             if s2(i,j,k)==0
                 tt=nan;
