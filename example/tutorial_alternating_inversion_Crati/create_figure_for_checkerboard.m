@@ -28,12 +28,12 @@ source=load('source_overview.csv');
 [nx,ny,nz]=size(X);
 
 % type the edge length of the block
-half_period=15000;
+edge_length=5000;
 %
 mx=[];
 n=0;
 while 1
-    tt=floor(((.5+n)*half_period)/h);
+    tt=floor(((.5+n)*edge_length)/h);
     if tt>=nx
         break;
     end
@@ -44,7 +44,7 @@ end
 my=[];
 n=0;
 while 1
-    tt=floor(((.5+n)*half_period)/h);
+    tt=floor(((.5+n)*edge_length)/h);
     if tt>=ny
         break;
     end
@@ -55,7 +55,7 @@ end
 mz=[];
 n=0;
 while 1
-    tt=floor(((.5+n)*half_period)/h);
+    tt=floor(((.5+n)*edge_length)/h);
     if tt>=nz
         break;
     end
