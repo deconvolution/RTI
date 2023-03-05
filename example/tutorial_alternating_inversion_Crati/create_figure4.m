@@ -33,6 +33,9 @@ receiver=load('./receiver_overview.csv');
 
 tt=load('../tutorial_alternating_checkerboard_Crati/c_vp.mat');
 checkerboard_P=tt.data.vp;
+%% please remove this section if you already have an inverted vp and vs
+vp=randn(nx,ny,nz);
+vs=randn(nx,ny,nz);
 %% slection with checkerboard P
 n=round(edge_length/h);
 s=zeros(length(1:floor(nx/n)+1) ...
@@ -61,6 +64,11 @@ s(5,5,2)=1;
 s(5,6,2)=1;
 s(5,7,2)=1;
 s(6,3:6,2)=1;
+
+s(3,4,3)=1;
+s(10,10,4)=1;
+s(30,30,5)=1;
+s(30,30,6)=1;
 
 
 % Change k from 1 to max and assign s
@@ -159,7 +167,7 @@ for i=1:floor(nx/n)+1
             else
                 tt=1;
             end
-            if i==floor(nx/n)+1 || j==floor(ny/n)+1 || k==floor(nz/n)+1
+            if i==floor(nx/n)+1 || j==floor(ny/n)+1 || k==floor(nz/n)
                 tt2(((1+(i-1)*n):end), ((1+(j-1)*n):end), ((1+(k-1)*n):end))=tt*tt2(((1+(i-1)*n):end), ((1+(j-1)*n):end), ((1+(k-1)*n):end));
             else
                 tt2(((1:n)+(i-1)*n), ((1:n)+(j-1)*n), ((1:n)+(k-1)*n))=tt*tt2(((1:n)+(i-1)*n), ((1:n)+(j-1)*n), ((1:n)+(k-1)*n));
@@ -177,7 +185,7 @@ for i=1:floor(nx/n)+1
             if s2(i,j,k)==0
                 tt=nan;
             end
-            if i==floor(nx/n)+1 || j==floor(ny/n)+1 || k==floor(nz/n)+1
+            if i==floor(nx/n)+1 || j==floor(ny/n)+1 || k==floor(nz/n)
                 tt2(((1+(i-1)*n):end), ((1+(j-1)*n):end), ((1+(k-1)*n):end))=tt*tt2(((1+(i-1)*n):end), ((1+(j-1)*n):end), ((1+(k-1)*n):end));
             else
                 tt2(((1:n)+(i-1)*n), ((1:n)+(j-1)*n), ((1:n)+(k-1)*n))=tt*tt2(((1:n)+(i-1)*n), ((1:n)+(j-1)*n), ((1:n)+(k-1)*n));
@@ -218,7 +226,7 @@ data.r_vs=vs-vs0;
 save('r_vs.mat','data');
 
 %% vp horizontal xy plane
-z=1000:-2000:-18000;
+z=2500:-2000:-26000;
 a=ceil(sqrt(length(z)));
 
 figure;
@@ -228,7 +236,6 @@ set(gcf,'position',[80,80,1500,1500]);
 for i=1:length(z)
     tt=find(abs(Z(1,1,:)-z(i))==min(abs(Z(1,1,:)-z(i))));
     tt=tt(1);
-    j=1;
     subplot(a,a,i)
     imAlpha=ones(size(vp(:,:,tt)'));
     imAlpha(isnan(vp(:,:,tt)'))=0;

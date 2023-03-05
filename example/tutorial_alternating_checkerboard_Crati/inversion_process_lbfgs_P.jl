@@ -259,7 +259,6 @@ mutable struct data3
 end
 data=data3(0,0,0,0,0,0,0,0);
 
-Y,X,Z=RTI.meshgrid((1:ny)*h,(1:nx)*h,(1:nz)*h);
 data.X=X;
 data.Y=Y;
 data.Z=Z;
