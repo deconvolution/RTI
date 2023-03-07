@@ -34,8 +34,10 @@ receiver=load('./receiver_overview.csv');
 tt=load('../tutorial_alternating_checkerboard_Crati/c_vp.mat');
 checkerboard_P=tt.data.vp;
 %% please remove this section if you already have an inverted vp and vs
+%{
 vp=randn(nx,ny,nz);
 vs=randn(nx,ny,nz);
+%}
 %% slection with checkerboard P
 n=round(edge_length/h);
 s=zeros(length(1:floor(nx/n)+1) ...
@@ -66,13 +68,13 @@ s(5,7,2)=1;
 s(6,3:6,2)=1;
 
 s(3,4,3)=1;
-s(10,10,4)=1;
-s(30,30,5)=1;
-s(30,30,6)=1;
+s(3,3,4)=1;
+s(5,5,5)=1;
+s(6,6,6)=1;
 
 
 % Change k from 1 to max and assign s
-k=2;
+k=6;
 
 tt=k*n-floor(n/2);
 
@@ -156,6 +158,7 @@ subplot(2,2,3)
 imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],s2(:,:,k)')
 set(gca,'YDir','normal');
 %% evaluate inversion
+%{
 s(:,:,end-1:-1:1)=s(:,:,1:end-1);
 s2(:,:,end-1:-1:1)=s2(:,:,1:end-1);
 tt2=vp;
@@ -194,6 +197,7 @@ for i=1:floor(nx/n)+1
     end
 end
 vs=tt2;
+%}
 %% evaluate inversion
 tt=ones(size(vp));
 tt(isnan(vp))=nan;
@@ -239,9 +243,7 @@ for i=1:length(z)
     subplot(a,a,i)
     imAlpha=ones(size(vp(:,:,tt)'));
     imAlpha(isnan(vp(:,:,tt)'))=0;
-    imagesc([min(X(:)),max(X(:))], ...
-        [min(Y(:)),max(Y(:))], ...
-        vp(:,:,tt)'-vp0(:,:,tt)','AlphaData',imAlpha);
+    imagesc(vp(:,:,tt)'-vp0(:,:,tt)','AlphaData',imAlpha);
     set(gca,'color',1*[1 1 1]);
     set(gca,'ydir','normal');
     title({['vp z =' num2str(z(i)) 'm']});

@@ -89,6 +89,7 @@ va=va/ne;
 
 # initial velocity model
 v=tt["vp"];
+v[:] .=5400;
 
 # reshape the velocity to a 1D array
 vc=reshape(v,nx*ny*nz,);
@@ -222,7 +223,7 @@ end
 N2=-1;
 
 # Test inversion.
-fu=6;
+fu=4;
 E0=data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0);
 sca=1;
 test_storage=zeros(size(vc));
@@ -230,13 +231,22 @@ g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 
 # Perform inversion
-fu=6;
+fu=4;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
 linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
 Optim.Options(iterations=10,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
-
+vc=opt1.minimizer;
+#=
+# Perform inversion
+fu=6;
+opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,1)[1],
+g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
+linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
+Optim.Options(iterations=10,store_trace=true,show_trace=true,
+x_tol=0,g_tol=0));
+=#
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);
 vtkfile["v"]=reshape(opt1.minimizer,nx,ny,nz);

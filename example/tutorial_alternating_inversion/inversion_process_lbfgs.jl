@@ -232,9 +232,8 @@ function g!(storage,vc)
     storage[:]=DV[:];
 end
 ## Optimization
-
 # define the inciden direction for rays to receivers, 1 for +z and -1 for -z.
-N2=1;
+N2=-1;
 
 # Test inversion.
 fu=3;

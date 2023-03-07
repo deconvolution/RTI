@@ -242,7 +242,6 @@ test_storage=zeros(size(vc));
 g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 
-
 # Perform inversion
 fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,1)[1],
