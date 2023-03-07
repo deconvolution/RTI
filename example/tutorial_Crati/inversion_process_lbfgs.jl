@@ -23,7 +23,7 @@ T0=0;
 ## read data
 tt=readdir("./obs/");
 file_name=tt;
-for I=1:size(tt,1)
+for I=1:5#size(tt,1)
     global R_true,s1,s2,s3,r1,r2,r3;
     tt2=RTI.readmat(string("./obs/",tt[I]),"data");
     R_true=push!(R_true,tt2["Rp"][:,4]);
