@@ -231,19 +231,17 @@ sca=1/maximum(abs.(test_storage));
 fu=5;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
-linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
-Optim.Options(iterations=10,store_trace=true,show_trace=true,
+linesearch=LineSearches.BackTracking(c_1=10.0^(-20))),
+Optim.Options(iterations=5,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
 vc=opt1.minimizer;
 
-# Perform inversion with location update
-fu=6;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,1)[1],
-g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*10.0),
-linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
+g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*30.0,αmin=sca*10.0),
+linesearch=LineSearches.BackTracking(c_1=10.0^(-20))),
 Optim.Options(iterations=10,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
-
+vc=opt1.minimizer;
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);
 vtkfile["v"]=reshape(opt1.minimizer,nx,ny,nz);
@@ -300,5 +298,6 @@ for i=1:length(s1)
     .5*sum((input_s1-s1d[i][1]).^2*h^2+(input_s2-s2d[i][1]).^2*h^2+(input_s3-s3d[i][1]).^2*h^2);
 end
 ##
-i=1;
-RTI.JLD2.load(string(p3,"/temp2/source_",i,".jld2"))["data"]
+i=8;
+display(RTI.JLD2.load(string(p3,"/temp2/source_",i,".jld2"))["data"])
+display([s1[i],s2[i],s3[i]])
