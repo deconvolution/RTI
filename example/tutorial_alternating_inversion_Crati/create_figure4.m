@@ -7,8 +7,9 @@ X=tt.data.X;
 Y=tt.data.Y;
 Z=tt.data.Z;
 h=X(2)-X(1);
-tt=load('./inversion_process_lbfgs_P/final/final_model.mat');
-vs=tt.data.v;
+%tt=load('./inversion_process_lbfgs_S/final/final_model.mat');
+%vs=tt.data.v;
+vs=3000*ones(size(vp));
 
 vp_vs=vp./vs;
 tt=load(['../tutorial_alternating_checkerboard_Crati/' ...
@@ -243,7 +244,9 @@ for i=1:length(z)
     subplot(a,a,i)
     imAlpha=ones(size(vp(:,:,tt)'));
     imAlpha(isnan(vp(:,:,tt)'))=0;
-    imagesc(vp(:,:,tt)'-vp0(:,:,tt)','AlphaData',imAlpha);
+    imagesc([min(X(:)),max(X(:))], ...
+        [min(Y(:)),max(Y(:))], ...
+        vp(:,:,tt)'-vp0(:,:,tt)','AlphaData',imAlpha);
     set(gca,'color',1*[1 1 1]);
     set(gca,'ydir','normal');
     title({['vp z =' num2str(z(i)) 'm']});
@@ -408,3 +411,33 @@ for i=1:length(y)
     %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
 end
 print(gcf,['./vs_xz'],'-djpeg','-r400');
+%% vp/vs
+z=5000:-2000:-18000;
+a=ceil(sqrt(length(z)));
+
+figure;
+set(gcf,'position',[80,80,1500,1500]);
+
+%limps=[1.5,2.1];
+for i=1:length(z)
+    tt=find(abs(Z(1,1,:)-z(i))==min(abs(Z(1,1,:)-z(i))));
+    tt=tt(1);
+    j=1;
+    subplot(a,a,i)
+    imAlpha=ones(size(vp_vs(:,:,tt)'));
+    imAlpha(isnan(vp_vs(:,:,tt)'))=0;
+    imagesc([min(X(:)),max(X(:))], ...
+        [min(Y(:)),max(Y(:))], ...
+        vp_vs(:,:,tt)','AlphaData',imAlpha);
+    set(gca,'color',1*[1 1 1]);
+    set(gca,'ydir','normal');
+    title({['vp_vs z =' num2str(z(i)) 'm']});
+    
+    xlabel('X [m]');
+    ylabel('Y [m]');
+    %caxis(limp);
+    colormap(redblue2);
+    colorbar;
+    hold on;
+    plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+end
