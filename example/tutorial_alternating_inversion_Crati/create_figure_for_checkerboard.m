@@ -28,7 +28,7 @@ source=load('source_overview.csv');
 [nx,ny,nz]=size(X);
 
 % type the edge length of the block
-edge_length=5000;
+edge_length=6000;
 %
 mx=[];
 n=0;

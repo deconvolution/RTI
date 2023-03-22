@@ -7,9 +7,11 @@ X=tt.data.X;
 Y=tt.data.Y;
 Z=tt.data.Z;
 h=X(2)-X(1);
-
+%{
 tt=load('./inversion_process_lbfgs_S/final/final_model.mat');
 vs=tt.data.v;
+%}
+vs=.8*vp;
 
 vp_vs=vp./vs;
 tt=load(['../tutorial_alternating_checkerboard_Crati/' ...
@@ -69,10 +71,36 @@ s=zeros(length(x_line),...
     length(z_line));
 
 s(4,4,1)=1;
+s(4,5,1)=1;
+s(4,6,1)=1;
+s(5,2,1)=1;
+s(5,3,1)=1;
+s(5,4,1)=1;
+s(5,5,1)=1;
+
+s(3,3,2)=1;
+s(3,4,2)=1;
+s(3,5,2)=1;
+s(4,4,2)=1;
+s(4,5,2)=1;
+s(4,6,2)=1;
+s(4,7,2)=1;
+s(5,2,2)=1;
+s(5,3,2)=1;
+s(5,4,2)=1;
+s(5,5,2)=1;
+s(5,6,2)=1;
+s(5,7,2)=1;
+s(6,3:6,2)=1;
+
+s(3,4,3)=1;
+s(3,3,4)=1;
+s(5,5,5)=1;
+s(6,6,6)=1;
 
 
 % Change k from 1 to max and assign s
-k=1;
+k=3;
 
 figure(60)
 subplot(2,2,1)
@@ -102,34 +130,49 @@ subplot(2,2,3)
 imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],s(:,:,k)')
 set(gca,'YDir','normal');
 %% slection with checkerboard S
-s2=zeros(length(x_line),...
-    length(y_line), ...
-    length(z_line));
+tt=load('../tutorial_alternating_checkerboard_Crati/c_vs.mat');
+checkerboard_S=tt.data.vs;
 
-s2(4,4,1)=1;
+n=round(edge_length/h);
+s2=zeros(length(1:floor(nx/n)+1) ...
+    ,length(1:floor(ny/n)+1), ...
+    length(1:floor(nz/n)));
 
-% Change k from 1 to max and assign s2
-k=1;
+s2(5,3,1)=1;
 
-figure(60)
+s2(4,4:5,2)=1;
+s2(5,2:5,2)=1;
+s2(6,2:6,2)=1;
+
+s2(3,2,3)=1;
+s2(4,6,3)=1;
+s2(5,6:7,3)=1;
+
+
+% Change k from 1 to max and assign s
+k=2;
+
+tt=k*n-floor(n/2);
+
+figure(1)
 subplot(2,2,1)
-imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],cist(:,:,z_center(k))');
+imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],checkerboard_S(:,:,end-tt)');
 set(gca,'YDir','normal');
 hold on;
 plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
 subplot(2,2,2)
-imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],cis(:,:,z_center(k))');
+imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],cis(:,:,end-tt)');
 set(gca,'YDir','normal');
 hold on;
-for i=1:length(x_line)
-    plot([X(x_line(i),1,1),X(x_line(i),1,1)],[min(Y(:)),max(Y(:))],'color','black');
+for i=1:n:nx
+    plot([X(i,1,1),X(i,1,1)],[min(Y(:)),max(Y(:))],'color','black');
     hold on;
 end
 hold on;
 plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
 
-for i=1:length(y_line)
-    plot([min(X(:)),max(X(:))],[Y(1,y_line(i),1),Y(1,y_line(i),1)],'color','black');
+for i=1:n:ny
+    plot([min(X(:)),max(X(:))],[(Y(1,i,1)),(Y(1,i,1))],'color','black');
     hold on;
 end
 hold on;
@@ -139,42 +182,35 @@ subplot(2,2,3)
 imagesc([min(X(:)),max(X(:))],[min(Y(:)),max(Y(:))],s2(:,:,k)')
 set(gca,'YDir','normal');
 %% evaluate inversion
-%{
-tt2=ones(size(vp))*nan;
+tt2=vp;
 for i=1:nx
     for j=1:ny
         for k=1:nz
-            tt4=floor(X(i,1,1)/edge_length);
-            tt5=floor(Y(1,j,1)/edge_length);
-            tt6=floor((Z(1,1,k)-min(Z,[],"all"))/edge_length);
-            if tt4~=0 && tt5~=0 && tt6~=0 && ...
-                    tt4<=size(s,1) && tt5<=size(s,2) && ...
-                    tt6<=size(s,3) && s(tt4,tt5,tt6)==1
-                tt2(i,j,k)=vp(i,j,k);
-            end
+            
         end
     end
 end
 vp=tt2;
 
-tt2=ones(size(vs))*nan;
-for i=1:nx
-    for j=1:ny
-        for k=1:nz
-            tt4=floor(X(i,1,1)/edge_length);
-            tt5=floor(Y(1,j,1)/edge_length);
-            tt6=floor((Z(1,1,k)-min(Z,[],"all"))/edge_length);
-            if tt4~=0 && tt5~=0 && tt6~=0 && ...
-                    tt4<=size(s2,1) && tt5<=size(s2,2) && ...
-                    tt6<=size(s2,3) && s2(tt4,tt5,tt6)==1
-                tt2(i,j,k)=vs(i,j,k);
+tt2=vs;
+for i=1:floor(nx/n)+1
+    for j=1:floor(ny/n)+1
+        for k=1:floor(nz/n)
+            tt=1;
+            if s2(i,j,k)==0
+                tt=nan;
+            end
+            if i==floor(nx/n)+1 || j==floor(ny/n)+1 || k==floor(nz/n)
+                tt2(((1+(i-1)*n):end), ((1+(j-1)*n):end), ((1+(k-1)*n):end))=tt*tt2(((1+(i-1)*n):end), ((1+(j-1)*n):end), ((1+(k-1)*n):end));
+            else
+                tt2(((1:n)+(i-1)*n), ((1:n)+(j-1)*n), ((1:n)+(k-1)*n))=tt*tt2(((1:n)+(i-1)*n), ((1:n)+(j-1)*n), ((1:n)+(k-1)*n));
             end
         end
     end
 end
 vs=tt2;
 %}
-%% save evaluate inversion
+%% evaluate inversion
 tt=ones(size(vp));
 tt(isnan(vp))=nan;
 data=tt;
@@ -204,21 +240,18 @@ data.nz=nz;
 data.h=h;
 data.r_vs=vs-vs0;
 save('r_vs.mat','data');
+
 %% test conversione coordinate
 Y=(Y/1000)/111+39.08;
 X=(X/1000)/(111*cos(39.08*pi/180))+15.93;
+
 %% vp horizontal xy plane
 %z=-2000:-2000:-20000;
-z=-2000:-2000:-16000;
+z=-2000:-1000:-16000;
 %a=ceil(sqrt(length(z)));
 
 figure;
 set(gcf,'position',[80,80,1000,1500]);
-% compute mean
-vp0=zeros(size(vp));
-for k=1:size(vp0,3)
-    vp0(:,:,k)=mean(vp(:,:,k),'all');
-end
 
 %limps=[1.5,2.1];
 for i=1:length(z)
@@ -239,9 +272,9 @@ for i=1:length(z)
     %xlabel('X [m]');
     %ylabel('Y [m]');
     %caxis(limp);
-    caxis([-600 600])
+    caxis([-400 400])
     colormap(redblue2);
-    if i>6 %8
+    if i>12 %8
         xlabel('lon [deg]');
         cb=colorbar('southoutside');
         cb.Position=cb.Position+[-0.007 -0.09 0.009 0.009];
@@ -324,11 +357,6 @@ a=ceil(sqrt(length(z)));
 
 figure;
 set(gcf,'position',[80,80,1500,1500]);
-
-vs0=zeros(size(vs));
-for k=1:size(vp0,3)
-    vs0(:,:,k)=mean(vs(:,:,k),'all');
-end
 
 %limps=[1.5,2.1];
 for i=1:length(z)
