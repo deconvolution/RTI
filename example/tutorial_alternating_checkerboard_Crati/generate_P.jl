@@ -64,13 +64,13 @@ Z=tt["Z"];
 h=tt["dx"];
 
 # Change the edge length of each block
-edge_length=10000;
+edge_length=6000;
 w=RTI.cb(h,nx,ny,nz,edge_length);
 
 v=zeros(nx,ny,nz);
 v[:] .=5000;
 
-v=v+1000*w;
+v=v+500*w;
 
 data=copy(tt);
 data["vp"]=v;

@@ -44,7 +44,7 @@ tt=readdir("./generate_P/");
 file_name=tt;
 for I=1:size(tt,1)
     global R_true,s1d,s2d,s3d,r1,r2,r3;
-    tt2=RTI.readmat(string("./obs/",tt[I]),"data");
+    tt2=RTI.readmat(string("./generate_P/",tt[I]),"data");
     R_true=push!(R_true,tt2["Rp"][:,4]);
     s1d=push!(s1d,round.(Int64,tt2["S"][:,1]));
     s2d=push!(s2d,round.(Int64,tt2["S"][:,2]));
@@ -186,7 +186,6 @@ function g!(storage,vc)
             r1=r1[I],
             r2=r2[I],
             r3=r3[I]);
-
             # Compute adjoint travel time
             lambda,~=RTI.eikonal.acoustic_eikonal_adjoint(nx=nx,
             ny=ny,
@@ -223,7 +222,7 @@ end
 N2=-1;
 
 # Test inversion.
-fu=4;
+fu=3;
 E0=data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0);
 sca=1;
 test_storage=zeros(size(vc));
@@ -231,12 +230,21 @@ g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 
 # Perform inversion
+
 fu=3;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*1.0),
 linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
-Optim.Options(iterations=10,store_trace=true,show_trace=true,
+Optim.Options(iterations=20,store_trace=true,show_trace=true,
 x_tol=0,g_tol=0));
+#=
+fu=3;
+opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0)[1],
+g!,vc,GradientDescent(alphaguess=LineSearches.InitialQuadratic(α0=sca*50.0,αmin=sca*1.0),
+linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),
+Optim.Options(iterations=20,store_trace=true,show_trace=true,
+x_tol=0,g_tol=0));
+=#
 ## write final model to vtk
 vtkfile=RTI.vtk_grid(string(p3,"/final/final_model"),X,Y,Z);
 vtkfile["v"]=reshape(opt1.minimizer,nx,ny,nz);

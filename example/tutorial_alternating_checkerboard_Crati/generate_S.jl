@@ -37,7 +37,7 @@ for I=1:size(tt,1)
     global R_true,s1d,s2d,s3d,r1,r2,r3;
     tt2=RTI.readmat(string("./obs/",tt[I]),"data");
     if length(tt2["Rs"])!=0
-        R_true=push!(R_true,tt2["Rp"][:,4]);
+        R_true=push!(R_true,tt2["Rs"][:,4]);
         s1d=push!(s1d,round.(Int64,tt2["S"][:,1]));
         s2d=push!(s2d,round.(Int64,tt2["S"][:,2]));
         s3d=push!(s3d,round.(Int64,tt2["S"][:,3]));
@@ -66,13 +66,13 @@ Z=tt["Z"];
 h=tt["dx"];
 
 # Change the edge length of each block
-edge_length=5000;
+edge_length=6000;
 w=RTI.cb(h,nx,ny,nz,edge_length);
 
 v=zeros(nx,ny,nz);
 v[:] .=3000;
 
-v=v+600*w;
+v=v+300*w;
 
 data=copy(tt);
 data["vs"]=v;

@@ -40,24 +40,22 @@ r2t=Vector{Vector{Float64}}();
 r3t=Vector{Vector{Float64}}();
 T0=0;
 ## read data
-tt=readdir("./obs/");
+tt=readdir("./generate_S/");
 file_name=tt;
 I=1;
 n=1;
 while I<=size(tt,1)
     global R_true,s1d,s2d,s3d,r1,r2,r3,I,n;
-    tt2=RTI.readmat(string("./obs/",tt[I]),"data");
+    tt2=RTI.readmat(string("./generate_S/",tt[I]),"data");
     if length(tt2["Rs"])!=0
         R_true=push!(R_true,tt2["Rs"][:,4]);
-        tt3=RTI.JLD2.load(string("inversion_process_lbfgs_P/temp2/source_",I,".jld2"))["data"];
-        s1d=push!(s1d,round.(Int64,[tt3[1]]));
-        s2d=push!(s2d,round.(Int64,[tt3[2]]));
-        s3d=push!(s3d,round.(Int64,[tt3[3]]));
-
+        s1d=push!(s1d,round.(Int64,tt2["S"][:,1]));
+        s2d=push!(s2d,round.(Int64,tt2["S"][:,2]));
+        s3d=push!(s3d,round.(Int64,tt2["S"][:,3]));
         r1=push!(r1,round.(Int64,tt2["Rs"][:,1]));
         r2=push!(r2,round.(Int64,tt2["Rs"][:,2]));
         r3=push!(r3,round.(Int64,tt2["Rs"][:,3]));
-        RTI.JLD2.save(string(p3,"/temp2/source_",n,".jld2"), "data",[tt3[1],tt3[2],tt3[3]]);
+        RTI.JLD2.save(string(p3,"/temp2/source_",I,".jld2"), "data",[s1d[I][1],s2d[I][1],s3d[I][1]]);
         n=n+1;
     end
     I=I+1;
@@ -231,7 +229,7 @@ end
 N2=-1;
 
 # Test inversion.
-fu=4;
+fu=1;
 E0=data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0);
 sca=1;
 test_storage=zeros(size(vc));
@@ -239,7 +237,7 @@ g!(test_storage,vc);
 sca=1/maximum(abs.(test_storage));
 
 # Perform inversion
-fu=4;
+fu=1;
 opt1=optimize(vc->data_cost_L2_norm(vc,nx,ny,nz,h,s1,s2,s3,T0,r1,r2,r3,p3,R_true,0)[1],
 g!,vc,LBFGS(m=5,alphaguess=LineSearches.InitialQuadratic(α0=sca*60.0,αmin=sca*10.0),
 linesearch=LineSearches.BackTracking(c_1=10.0^(-8))),

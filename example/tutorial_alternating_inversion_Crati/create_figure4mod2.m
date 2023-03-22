@@ -7,9 +7,11 @@ X=tt.data.X;
 Y=tt.data.Y;
 Z=tt.data.Z;
 h=X(2)-X(1);
-%tt=load('./inversion_process_lbfgs_S/final/final_model.mat');
-%vs=tt.data.v;
-vs=3000*ones(size(vp));
+%{
+tt=load('./inversion_process_lbfgs_S/final/final_model.mat');
+vs=tt.data.v;
+%}
+vs=.8*vp;
 
 vp_vs=vp./vs;
 tt=load(['../tutorial_alternating_checkerboard_Crati/' ...
@@ -26,9 +28,12 @@ turbo2=flip(turbo,1);
 redblue2=flip(redblue,1);
 %%
 % type the edge length
-edge_length=10000;
+edge_length=7000;
 %%
 receiver=load('./receiver_overview.csv');
+%% test conversione coord receiver
+receiver(:,2)=(receiver(:,2)/1000)/111+39.08;
+receiver(:,1)=(receiver(:,1)/1000)/(111*cos(39.08*pi/180))+15.93;
 %% create checkerboard
 [nx,ny,nz]=size(X);
 
@@ -40,20 +45,42 @@ vp=randn(nx,ny,nz);
 vs=randn(nx,ny,nz);
 %}
 %% slection with checkerboard P
-n=floor(edge_length/h);
+n=round(edge_length/h);
 s=zeros(length(1:floor(nx/n)+1) ...
     ,length(1:floor(ny/n)+1), ...
     length(1:floor(nz/n)));
 
-s(2,2,1)=1;
-s(2,2,1)=1;
-
+s(4,4,1)=1;
+s(4,5,1)=1;
+s(4,6,1)=1;
+s(5,2,1)=1;
+s(5,3,1)=1;
+s(5,4,1)=1;
+s(5,5,1)=1;
 
 s(3,3,2)=1;
+s(3,4,2)=1;
+s(3,5,2)=1;
+s(4,4,2)=1;
+s(4,5,2)=1;
+s(4,6,2)=1;
+s(4,7,2)=1;
+s(5,2,2)=1;
+s(5,3,2)=1;
+s(5,4,2)=1;
+s(5,5,2)=1;
+s(5,6,2)=1;
+s(5,7,2)=1;
+s(6,3:6,2)=1;
+
+s(3,4,3)=1;
+s(3,3,4)=1;
+s(5,5,5)=1;
+s(6,6,6)=1;
 
 
 % Change k from 1 to max and assign s
-k=2;
+k=6;
 
 tt=k*n-floor(n/2);
 
@@ -208,98 +235,118 @@ data.h=h;
 data.r_vs=vs-vs0;
 save('r_vs.mat','data');
 
+%% test conversione coordinate
+Y=(Y/1000)/111+39.08;
+X=(X/1000)/(111*cos(39.08*pi/180))+15.93;
+
 %% vp horizontal xy plane
-z=2500:-2000:-26000;
-a=ceil(sqrt(length(z)));
+%z=-2000:-2000:-20000;
+z=-2000:-1000:-16000;
+%a=ceil(sqrt(length(z)));
 
 figure;
-set(gcf,'position',[80,80,1500,1500]);
+set(gcf,'position',[80,80,1000,1500]);
 
 %limps=[1.5,2.1];
 for i=1:length(z)
     tt=find(abs(Z(1,1,:)-z(i))==min(abs(Z(1,1,:)-z(i))));
     tt=tt(1);
-    subplot(a,a,i)
+    %subplot(a,a,i)
+    subplot(5,3,i)
     imAlpha=ones(size(vp(:,:,tt)'));
     imAlpha(isnan(vp(:,:,tt)'))=0;
     imagesc([min(X(:)),max(X(:))], ...
         [min(Y(:)),max(Y(:))], ...
         vp(:,:,tt)'-vp0(:,:,tt)','AlphaData',imAlpha);
+    %imagesc(vp(:,:,tt)'-vp0(:,:,tt)','AlphaData',imAlpha);
     set(gca,'color',1*[1 1 1]);
     set(gca,'ydir','normal');
     title({['vp z =' num2str(z(i)) 'm']});
     
-    xlabel('X [m]');
-    ylabel('Y [m]');
+    %xlabel('X [m]');
+    %ylabel('Y [m]');
     %caxis(limp);
+    caxis([-400 400])
     colormap(redblue2);
-    colorbar;
+    if i>12 %8
+        xlabel('lon [deg]');
+        cb=colorbar('southoutside');
+        cb.Position=cb.Position+[-0.007 -0.09 0.009 0.009];
+    end
+    %if i==1 || i==5 || i==9
+    if i==1 || i==4 || i==7 || i==10 || i==13
+        ylabel('lat [deg]');
+    end
+%     xlim([16.1 16.5])
+%     ylim([39.2 39.6])
+    %colorbar;
     hold on;
-    plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+    %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+    plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');    
 end
 print(gcf,['./vp_xy'],'-djpeg','-r400');
 %% vp vertical yz plane
-x=3000:10000:44800;
-a=ceil(sqrt(length(x)));
-
-figure;
-set(gcf,'position',[80,80,1500,1500]);
-
-%limps=[1.5,2.1];
-for i=1:length(x)
-    tt=find(abs(X(:,1,1)-x(i))==min(abs(X(:,1,1)-x(i))));
-    tt=tt(1);
-    subplot(a,a,i)
-    imAlpha=reshape(ones(size(vp(tt,:,:))),[ny,nz])';
-    imAlpha(isnan(reshape(vp(tt,:,:),[ny,nz])'))=0;
-    imagesc([min(Y(:)),max(Y(:))], ...
-        [min(Z(:)),max(Z(:))], ...
-        reshape(vp(tt,:,:)-vp0(tt,:,:),[ny,nz])','AlphaData',imAlpha);
-    set(gca,'color',1*[1 1 1]);
-    set(gca,'ydir','normal');
-    title({['vp x =' num2str(x(i)) 'm']});
-    
-    xlabel('Y [m]');
-    ylabel('Z [m]');
-    %caxis(limp);
-    colormap(redblue2);
-    colorbar;
-    %hold on;
-    %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
-end
-print(gcf,['./vp_yz'],'-djpeg','-r400');
-%% vp vertical xz plane
-y=3000:10000:60400;
-a=ceil(sqrt(length(x)));
-
-figure;
-set(gcf,'position',[80,80,1500,1500]);
-
-%limps=[1.5,2.1];
-for i=1:length(y)
-    tt=find(abs(Y(1,:,1)-y(i))==min(abs(Y(1,:,1)-y(i))));
-    tt=tt(1);
-    subplot(a,a,i)
-    imAlpha=reshape(ones(size(vp(:,tt,:))),[nx,nz])';
-    imAlpha(isnan(reshape(vp(:,tt,:),[nx,nz])'))=0;
-    imagesc([min(X(:)),max(X(:))], ...
-        [min(Z(:)),max(Z(:))], ...
-        reshape(vp(:,tt,:)-vp0(:,tt,:),[nx,nz])','AlphaData',imAlpha);
-    set(gca,'color',1*[1 1 1]);
-    set(gca,'ydir','normal');
-    title({['vp y =' num2str(y(i)) 'm']});
-    
-    xlabel('X [m]');
-    ylabel('Z [m]');
-    %caxis(limp);
-    colormap(redblue2);
-    colorbar;
-    %hold on;
-    %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
-end
-print(gcf,['./vp_xz'],'-djpeg','-r400');
+% x=3000:10000:44800;
+% a=ceil(sqrt(length(x)));
+% 
+% figure;
+% set(gcf,'position',[80,80,1500,1500]);
+% 
+% %limps=[1.5,2.1];
+% for i=1:length(x)
+%     tt=find(abs(X(:,1,1)-x(i))==min(abs(X(:,1,1)-x(i))));
+%     tt=tt(1);
+%     subplot(a,a,i)
+%     imAlpha=reshape(ones(size(vp(tt,:,:))),[ny,nz])';
+%     imAlpha(isnan(reshape(vp(tt,:,:),[ny,nz])'))=0;
+%     imagesc([min(Y(:)),max(Y(:))], ...
+%         [min(Z(:)),max(Z(:))], ...
+%         reshape(vp(tt,:,:)-vp0(tt,:,:),[ny,nz])','AlphaData',imAlpha);
+%     set(gca,'color',1*[1 1 1]);
+%     set(gca,'ydir','normal');
+%     title({['vp x =' num2str(x(i)) 'm']});
+%     
+%     xlabel('Y [m]');
+%     ylabel('Z [m]');
+%     %caxis(limp);
+%     colormap(redblue2);
+%     colorbar;
+%     %hold on;
+%     %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+% end
+% print(gcf,['./vp_yz'],'-djpeg','-r400');
+% %% vp vertical xz plane
+% y=3000:10000:60400;
+% a=ceil(sqrt(length(x)));
+% 
+% figure;
+% set(gcf,'position',[80,80,1500,1500]);
+% 
+% %limps=[1.5,2.1];
+% for i=1:length(y)
+%     tt=find(abs(Y(1,:,1)-y(i))==min(abs(Y(1,:,1)-y(i))));
+%     tt=tt(1);
+%     subplot(a,a,i)
+%     imAlpha=reshape(ones(size(vp(:,tt,:))),[nx,nz])';
+%     imAlpha(isnan(reshape(vp(:,tt,:),[nx,nz])'))=0;
+%     imagesc([min(X(:)),max(X(:))], ...
+%         [min(Z(:)),max(Z(:))], ...
+%         reshape(vp(:,tt,:)-vp0(:,tt,:),[nx,nz])','AlphaData',imAlpha);
+%     set(gca,'color',1*[1 1 1]);
+%     set(gca,'ydir','normal');
+%     title({['vp y =' num2str(y(i)) 'm']});
+%     
+%     xlabel('X [m]');
+%     ylabel('Z [m]');
+%     %caxis(limp);
+%     colormap(redblue2);
+%     colorbar;
+%     %hold on;
+%     %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+% end
+% print(gcf,['./vp_xz'],'-djpeg','-r400');
 %% vs horizontal xy plane
-z=5000:-2000:-18000;
+z=-2000:-2000:-20000;
 a=ceil(sqrt(length(z)));
 
 figure;
@@ -320,77 +367,87 @@ for i=1:length(z)
     set(gca,'ydir','normal');
     title({['vs z =' num2str(z(i)) 'm']});
     
-    xlabel('X [m]');
-    ylabel('Y [m]');
+    %xlabel('X [m]');
+    %ylabel('Y [m]');
     %caxis(limp);
+    caxis([-400 400]);
     colormap(redblue2);
-    colorbar;
+    if i>8
+        xlabel('lon [deg]');
+        cb=colorbar('southoutside');
+        cb.Position=cb.Position+[-0.007 -0.09 0.009 0.009];
+    end
+    if i==1 || i==5 || i==9
+        ylabel('lat [deg]');
+    end
+    %colorbar;
     hold on;
     plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
 end
 print(gcf,['./vs_xy'],'-djpeg','-r400');
 %% vs vertical yz plane
-x=3000:10000:44800;
-a=ceil(sqrt(length(x)));
+% x=3000:10000:44800;
+% a=ceil(sqrt(length(x)));
+% 
+% figure;
+% set(gcf,'position',[80,80,1500,1500]);
+% 
+% %limps=[1.5,2.1];
+% for i=1:length(x)
+%     tt=find(abs(X(:,1,1)-x(i))==min(abs(X(:,1,1)-x(i))));
+%     tt=tt(1);
+%     subplot(a,a,i)
+%     imAlpha=reshape(ones(size(vs(tt,:,:))),[ny,nz])';
+%     imAlpha(isnan(reshape(vs(tt,:,:),[ny,nz])'))=0;
+%     imagesc([min(Y(:)),max(Y(:))], ...
+%         [min(Z(:)),max(Z(:))], ...
+%         reshape(vs(tt,:,:)-vs0(tt,:,:),[ny,nz])','AlphaData',imAlpha);
+%     set(gca,'color',1*[1 1 1]);
+%     set(gca,'ydir','normal');
+%     title({['vs x =' num2str(x(i)) 'm']});
+%     
+%     xlabel('Y [m]');
+%     ylabel('Z [m]');
+%     %caxis(limp);
+%     colormap(redblue2);
+%     colorbar;
+%     %hold on;
+%     %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+% end
+% print(gcf,['./vs_yz'],'-djpeg','-r400');
+% %% vs vertical xz plane
+% y=3000:10000:60400;
+% a=ceil(sqrt(length(x)));
+% 
+% figure;
+% set(gcf,'position',[80,80,1500,1500]);
+% 
+% %limps=[1.5,2.1];
+% for i=1:length(y)
+%     tt=find(abs(Y(1,:,1)-y(i))==min(abs(Y(1,:,1)-y(i))));
+%     tt=tt(1);
+%     subplot(a,a,i)
+%     imAlpha=reshape(ones(size(vs(:,tt,:))),[nx,nz])';
+%     imAlpha(isnan(reshape(vs(:,tt,:),[nx,nz])'))=0;
+%     imagesc([min(X(:)),max(X(:))], ...
+%         [min(Z(:)),max(Z(:))], ...
+%         reshape(vs(:,tt,:)-vs0(:,tt,:),[nx,nz])','AlphaData',imAlpha);
+%     set(gca,'color',1*[1 1 1]);
+%     set(gca,'ydir','normal');
+%     title({['vs y =' num2str(y(i)) 'm']});
+%     
+%     xlabel('X [m]');
+%     ylabel('Z [m]');
+%     %caxis(limp);
+%     colormap(redblue2);
+%     colorbar;
+%     %hold on;
+%     %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
+% end
+% print(gcf,['./vs_xz'],'-djpeg','-r400');
 
-figure;
-set(gcf,'position',[80,80,1500,1500]);
-
-%limps=[1.5,2.1];
-for i=1:length(x)
-    tt=find(abs(X(:,1,1)-x(i))==min(abs(X(:,1,1)-x(i))));
-    tt=tt(1);
-    subplot(a,a,i)
-    imAlpha=reshape(ones(size(vs(tt,:,:))),[ny,nz])';
-    imAlpha(isnan(reshape(vs(tt,:,:),[ny,nz])'))=0;
-    imagesc([min(Y(:)),max(Y(:))], ...
-        [min(Z(:)),max(Z(:))], ...
-        reshape(vs(tt,:,:)-vs0(tt,:,:),[ny,nz])','AlphaData',imAlpha);
-    set(gca,'color',1*[1 1 1]);
-    set(gca,'ydir','normal');
-    title({['vs x =' num2str(x(i)) 'm']});
-    
-    xlabel('Y [m]');
-    ylabel('Z [m]');
-    %caxis(limp);
-    colormap(redblue2);
-    colorbar;
-    %hold on;
-    %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
-end
-print(gcf,['./vs_yz'],'-djpeg','-r400');
-%% vs vertical xz plane
-y=3000:10000:60400;
-a=ceil(sqrt(length(x)));
-
-figure;
-set(gcf,'position',[80,80,1500,1500]);
-
-%limps=[1.5,2.1];
-for i=1:length(y)
-    tt=find(abs(Y(1,:,1)-y(i))==min(abs(Y(1,:,1)-y(i))));
-    tt=tt(1);
-    subplot(a,a,i)
-    imAlpha=reshape(ones(size(vs(:,tt,:))),[nx,nz])';
-    imAlpha(isnan(reshape(vs(:,tt,:),[nx,nz])'))=0;
-    imagesc([min(X(:)),max(X(:))], ...
-        [min(Z(:)),max(Z(:))], ...
-        reshape(vs(:,tt,:)-vs0(:,tt,:),[nx,nz])','AlphaData',imAlpha);
-    set(gca,'color',1*[1 1 1]);
-    set(gca,'ydir','normal');
-    title({['vs y =' num2str(y(i)) 'm']});
-    
-    xlabel('X [m]');
-    ylabel('Z [m]');
-    %caxis(limp);
-    colormap(redblue2);
-    colorbar;
-    %hold on;
-    %plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
-end
-print(gcf,['./vs_xz'],'-djpeg','-r400');
-%% vp/vs
-z=5000:-2000:-18000;
+%% vp_vs horizontal xy plane
+z=-2000:-2000:-20000;
 a=ceil(sqrt(length(z)));
 
 figure;
@@ -409,13 +466,24 @@ for i=1:length(z)
         vp_vs(:,:,tt)','AlphaData',imAlpha);
     set(gca,'color',1*[1 1 1]);
     set(gca,'ydir','normal');
-    title({['vp_vs z =' num2str(z(i)) 'm']});
+    title({['vp / vs z =' num2str(z(i)) 'm']});
     
-    xlabel('X [m]');
-    ylabel('Y [m]');
+%     xlabel('X [m]');
+%     ylabel('Y [m]');
     %caxis(limp);
+    caxis([1.6 1.9])
     colormap(redblue2);
-    colorbar;
+    if i>8
+        xlabel('lon [deg]');
+        cb=colorbar('southoutside');
+        cb.Position=cb.Position+[-0.007 -0.09 0.009 0.009];
+    end
+    if i==1 || i==5 || i==9
+        ylabel('lat [deg]');
+    end
+
+    %colorbar;
     hold on;
     plot(receiver(:,1),receiver(:,2),'^','MarkerFaceColor','black');
 end
+print(gcf,['./vp_vs_xy'],'-djpeg','-r400');

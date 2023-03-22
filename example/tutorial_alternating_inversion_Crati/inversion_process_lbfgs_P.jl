@@ -89,6 +89,7 @@ va=va/ne;
 
 # initial velocity model
 v=tt["vp"];
+v[:] .=va;
 
 # reshape the velocity to a 1D array
 vc=reshape(v,nx*ny*nz,);
