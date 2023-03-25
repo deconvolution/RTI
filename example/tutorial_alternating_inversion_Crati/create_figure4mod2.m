@@ -72,7 +72,7 @@ s(4,4,1)=1;
 
 
 % Change k from 1 to max and assign s
-k=1;
+k=3;
 
 figure(60)
 subplot(2,2,1)
